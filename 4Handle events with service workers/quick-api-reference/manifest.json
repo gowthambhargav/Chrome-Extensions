@@ -16,10 +16,11 @@
     },
     "permissions": ["storage", "alarms"],
   "host_permissions": ["https://extension-tips.glitch.me/*"],
-  "content_scripts": [
-    {
-      "matches": ["https://developer.chrome.com/docs/extensions/reference/*"],
-      "js": ["content.js"]
-    }
-  ]
-  }
+}
+
+// "content_scripts": [
+//   {
+//     "matches": ["https://developer.chrome.com/docs/extensions/reference/*"],
+//     "js": ["content.js"]
+//   }
+// ]

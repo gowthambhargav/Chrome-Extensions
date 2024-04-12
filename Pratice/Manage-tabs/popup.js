@@ -9,10 +9,12 @@ for (const tab of tabs) {
 
   const title = tab.title?.split("-")[0]?.trim();
   let pathname;
-  try {
-    pathname = new URL(tab.url)?.pathname?.slice("/docs".length);
-  } catch (e) {
-    console.log("error");
+  if (typeof tab.url === 'string') {
+    try {
+      pathname = new URL(tab.url)?.pathname;
+    } catch (e) {
+      console.error("Invalid URL:", tab.url);
+    }
   }
   element.querySelector(".title").textContent = title;
   element.querySelector(".pathname").textContent = pathname;
@@ -33,9 +35,9 @@ button.addEventListener("click", async () => {
     let colors = ["grey","blue","red","yellow","green","pink","purple","cyan","orange"]
     const randomColor = Math.floor(Math.random()*colors.length)
     let color = colors[randomColor]
-    console.log(tabIds.map(async ({id})=>{
+    tabIds.map(async ({id})=>{
       await chrome.tabs.group({ tabIds });
-    }));
+    })
     const group = await chrome.tabs.group({ tabIds });
     await chrome.tabGroups.update(group, { title: "DOCS",color });
   }
@@ -60,14 +62,12 @@ groupbydomainbtn.addEventListener("click", async () => {
     if (typeof tab.url === 'string') {
       try {
         const domain = new URL(tab.url).hostname;
-        console.log(domain);
         domains.add(domain);
       } catch (error) {
         console.error(`Invalid URL: ${tab.url}`);
       }
     }
   }
-  console.log(domains,tabs);
   for (const domain of domains) {
     const tabs = await chrome.tabs.query({ currentWindow: true });
     const tabIds = tabs.filter(tab => {

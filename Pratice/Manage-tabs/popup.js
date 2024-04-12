@@ -55,7 +55,6 @@ unGroupbtn.addEventListener("click",async ()=>{
 const groupbydomainbtn = document.getElementById("groupbydomain")
 groupbydomainbtn.addEventListener("click", async () => {
   const tabs = await chrome.tabs.query({ currentWindow: true });
-  const tabIds = tabs.map(({ id }) => id);
   const domains = new Set();
   for (const tab of tabs) {
     if (typeof tab.url === 'string') {

@@ -1,10 +1,4 @@
-const tabs = await chrome.tabs.query({
-    url:[
-        "https://developer.mozilla.org/en-US/docs/Web/*",
-        "https://developer.mozilla.org/en-US/docs/Web/JavaScript/8",
-        "https://developer.mozilla.org/en-US/docs/*"
-    ]
-})
+const tabs = await chrome.tabs.query({currentWindow: true })
 const collator = new Intl.Collator();
 tabs.sort((a, b) => collator.compare(a.title, b.title));
 
@@ -13,8 +7,13 @@ const elements = new Set();
 for (const tab of tabs) {
   const element = template.content.firstElementChild.cloneNode(true);
 
-  const title = tab.title.split("-")[0].trim();
-  const pathname = new URL(tab.url).pathname.slice("/docs".length);
+  const title = tab.title?.split("-")[0]?.trim();
+  let pathname;
+  try {
+    pathname = new URL(tab.url)?.pathname?.slice("/docs".length);
+  } catch (e) {
+    console.log("error");
+  }
   element.querySelector(".title").textContent = title;
   element.querySelector(".pathname").textContent = pathname;
   element.querySelector("a").addEventListener("click", async () => {
@@ -28,15 +27,20 @@ document.querySelector("ul").append(...elements);
 
 const button = document.getElementById("Group");
 button.addEventListener("click", async () => {
+
   const tabIds = tabs.map(({ id }) => id);
   if (tabIds.length) {
     let colors = ["grey","blue","red","yellow","green","pink","purple","cyan","orange"]
     const randomColor = Math.floor(Math.random()*colors.length)
     let color = colors[randomColor]
+    console.log(tabIds.map(async ({id})=>{
+      await chrome.tabs.group({ tabIds });
+    }));
     const group = await chrome.tabs.group({ tabIds });
     await chrome.tabGroups.update(group, { title: "DOCS",color });
   }
 });
+
 
 const unGroupbtn = document.getElementById("UnGroup")
 
@@ -48,4 +52,38 @@ unGroupbtn.addEventListener("click",async ()=>{
     }
   }
 })
+const groupbydomainbtn = document.getElementById("groupbydomain")
+groupbydomainbtn.addEventListener("click", async () => {
+  const tabs = await chrome.tabs.query({ currentWindow: true });
+  const tabIds = tabs.map(({ id }) => id);
+  const domains = new Set();
+  for (const tab of tabs) {
+    if (typeof tab.url === 'string') {
+      try {
+        const domain = new URL(tab.url).hostname;
+        console.log(domain);
+        domains.add(domain);
+      } catch (error) {
+        console.error(`Invalid URL: ${tab.url}`);
+      }
+    }
+  }
+  console.log(domains,tabs);
+  for (const domain of domains) {
+    const tabs = await chrome.tabs.query({ currentWindow: true });
+    const tabIds = tabs.filter(tab => {
+      if (typeof tab.url === 'string') {
+        try {
+          return new URL(tab.url).hostname === domain;
+        } catch (error) {
+          console.error(`Invalid URL: ${tab.url}`);
+          return false;
+        }
+      }
+      return false;
+    }).map(({ id }) => id);
+    const group = await chrome.tabs.group({ tabIds });
+    await chrome.tabGroups.update(group, { title: domain });
+  }
+});
 
